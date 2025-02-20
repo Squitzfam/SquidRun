@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Dino Game</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Подключаем Telegram WebApp API -->
     <style>
         body {
             margin: 0;
@@ -32,6 +33,7 @@
 <body>
     <canvas id="gameCanvas"></canvas>
     <button onclick="showLeaderboard()">Show Leaderboard</button>
+
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
@@ -44,7 +46,7 @@
         let gameOver = false;
         let score = 0;
         let highScores = JSON.parse(localStorage.getItem("highScores")) || {};
-        let userId = Math.random().toString(36).substr(2, 9);
+        let userId = Telegram.WebApp.initDataUnsafe?.user?.id || "guest_" + Math.random().toString(36).substr(2, 9);
 
         function drawDino() {
             ctx.fillStyle = "black";
@@ -94,6 +96,7 @@
                 ) {
                     gameOver = true;
                     saveScore();
+                    sendScoreToBot(score);
                     alert("Game Over! Your score: " + score);
                 }
             });
@@ -124,6 +127,16 @@
             alert("Leaderboard:\n" + leaderboard.map(([id, s]) => `${id}: ${s}`).join("\n"));
         }
 
+        function sendScoreToBot(score) {
+            if (window.Telegram && window.Telegram.WebApp) {
+                let scoreData = JSON.stringify(score);
+                Telegram.WebApp.sendData(scoreData); // Отправляем очки в бота
+                console.log("Score sent to bot:", score);
+            } else {
+                console.error("Telegram WebApp API not available");
+            }
+        }
+
         document.addEventListener("keydown", (event) => {
             if (event.code === "Space") jump();
         });
@@ -132,8 +145,6 @@
 
         spawnObstacle();
         update();
-
-        setTimeout(showLeaderboard, 5000);
     </script>
 </body>
 </html>
