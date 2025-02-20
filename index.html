@@ -9,6 +9,7 @@
             margin: 0;
             overflow: hidden;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -20,10 +21,17 @@
             width: 100vw;
             height: 100vh;
         }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
+    <button onclick="showLeaderboard()">Show Leaderboard</button>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
@@ -129,4 +137,3 @@
     </script>
 </body>
 </html>
-
