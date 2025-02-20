@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Dino Game</title>
     <style>
         body {
@@ -17,55 +17,67 @@
         canvas {
             background: white;
             border: 2px solid black;
+            width: 100vw;
+            height: 100vh;
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="800" height="300"></canvas>
+    <canvas id="gameCanvas"></canvas>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        
-        let dino = { x: 50, y: 220, width: 40, height: 40, dy: 0, jumping: false };
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let dino = { x: 50, y: canvas.height - 80, width: 50, height: 50, dy: 0, jumping: false };
         let gravity = 0.5;
         let obstacles = [];
         let gameOver = false;
         let score = 0;
-        
+        let highScores = JSON.parse(localStorage.getItem("highScores")) || {};
+        let userId = Math.random().toString(36).substr(2, 9);
+
         function drawDino() {
             ctx.fillStyle = "black";
             ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
         }
-        
+
         function drawObstacles() {
             ctx.fillStyle = "red";
             obstacles.forEach(obstacle => {
                 ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
             });
         }
-        
+
+        function drawScore() {
+            ctx.fillStyle = "black";
+            ctx.font = "20px Arial";
+            ctx.fillText("Score: " + score, 20, 30);
+        }
+
         function update() {
             if (gameOver) return;
-            
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawDino();
             drawObstacles();
-            
+            drawScore();
+
             dino.y += dino.dy;
-            if (dino.y < 220) {
+            if (dino.y < canvas.height - 80) {
                 dino.dy += gravity;
             } else {
-                dino.y = 220;
+                dino.y = canvas.height - 80;
                 dino.jumping = false;
             }
-            
+
             obstacles.forEach((obstacle, index) => {
                 obstacle.x -= 5;
                 if (obstacle.x + obstacle.width < 0) {
                     obstacles.splice(index, 1);
                     score++;
                 }
-                
+
                 if (
                     dino.x < obstacle.x + obstacle.width &&
                     dino.x + dino.width > obstacle.x &&
@@ -73,33 +85,48 @@
                     dino.y + dino.height > obstacle.y
                 ) {
                     gameOver = true;
-                    alert("Game Over! Score: " + score);
+                    saveScore();
+                    alert("Game Over! Your score: " + score);
                 }
             });
-            
             requestAnimationFrame(update);
         }
-        
+
         function jump() {
             if (!dino.jumping) {
                 dino.dy = -10;
                 dino.jumping = true;
             }
         }
-        
+
         function spawnObstacle() {
             if (!gameOver) {
-                obstacles.push({ x: canvas.width, y: 230, width: 20, height: 40 });
+                obstacles.push({ x: canvas.width, y: canvas.height - 70, width: 30, height: 50 });
                 setTimeout(spawnObstacle, Math.random() * 2000 + 1000);
             }
         }
-        
+
+        function saveScore() {
+            highScores[userId] = Math.max(score, highScores[userId] || 0);
+            localStorage.setItem("highScores", JSON.stringify(highScores));
+        }
+
+        function showLeaderboard() {
+            let leaderboard = Object.entries(highScores).sort((a, b) => b[1] - a[1]);
+            alert("Leaderboard:\n" + leaderboard.map(([id, s]) => `${id}: ${s}`).join("\n"));
+        }
+
         document.addEventListener("keydown", (event) => {
             if (event.code === "Space") jump();
         });
-        
+        document.addEventListener("click", jump);
+        document.addEventListener("touchstart", jump);
+
         spawnObstacle();
         update();
+
+        setTimeout(showLeaderboard, 5000);
     </script>
 </body>
 </html>
+
