@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Dino Game</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Подключаем Telegram WebApp API -->
+    <title>Hamster Combat</title>
     <style>
         body {
             margin: 0;
@@ -14,16 +13,16 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f4f4f4;
+            background: url('/mnt/data/waverly-kids-kd1783-252154-oboykin-york-waverly-kids.jpg') no-repeat center center/cover;
         }
         canvas {
-            background: white;
+            background: url('/mnt/data/Песок1.jpg') no-repeat center center/cover;
             border: 2px solid black;
             width: 100vw;
-            height: 100vh;
+            height: 80vh;
         }
         button {
-            margin-top: 10px;
+            margin: 5px;
             padding: 10px;
             font-size: 16px;
             cursor: pointer;
@@ -32,25 +31,25 @@
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
-    <button onclick="showLeaderboard()">Show Leaderboard</button>
-
+    <button onclick="showScore()">Show Score</button>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        canvas.height = window.innerHeight * 0.8;
+
+        let player = new Image();
+        player.src = "/mnt/data/squarepixel1copy.png";
 
         let dino = { x: 50, y: canvas.height - 80, width: 50, height: 50, dy: 0, jumping: false };
         let gravity = 0.5;
         let obstacles = [];
         let gameOver = false;
         let score = 0;
-        let highScores = JSON.parse(localStorage.getItem("highScores")) || {};
-        let userId = Telegram.WebApp.initDataUnsafe?.user?.id || "guest_" + Math.random().toString(36).substr(2, 9);
+        let totalScore = parseInt(localStorage.getItem("totalScore")) || 0;
 
         function drawDino() {
-            ctx.fillStyle = "black";
-            ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+            ctx.drawImage(player, dino.x, dino.y, dino.width, dino.height);
         }
 
         function drawObstacles() {
@@ -64,6 +63,7 @@
             ctx.fillStyle = "black";
             ctx.font = "20px Arial";
             ctx.fillText("Score: " + score, 20, 30);
+            ctx.fillText("Total Score: " + totalScore, 20, 60);
         }
 
         function update() {
@@ -96,7 +96,6 @@
                 ) {
                     gameOver = true;
                     saveScore();
-                    sendScoreToBot(score);
                     alert("Game Over! Your score: " + score);
                 }
             });
@@ -118,23 +117,12 @@
         }
 
         function saveScore() {
-            highScores[userId] = Math.max(score, highScores[userId] || 0);
-            localStorage.setItem("highScores", JSON.stringify(highScores));
+            totalScore += score;
+            localStorage.setItem("totalScore", totalScore);
         }
 
-        function showLeaderboard() {
-            let leaderboard = Object.entries(highScores).sort((a, b) => b[1] - a[1]);
-            alert("Leaderboard:\n" + leaderboard.map(([id, s]) => `${id}: ${s}`).join("\n"));
-        }
-
-        function sendScoreToBot(score) {
-            if (window.Telegram && window.Telegram.WebApp) {
-                let scoreData = JSON.stringify(score);
-                Telegram.WebApp.sendData(scoreData); // Отправляем очки в бота
-                console.log("Score sent to bot:", score);
-            } else {
-                console.error("Telegram WebApp API not available");
-            }
+        function showScore() {
+            alert("Your total score: " + totalScore);
         }
 
         document.addEventListener("keydown", (event) => {
